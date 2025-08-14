@@ -2,14 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { Pie, PieChart, Cell } from "recharts";
-import { TrendingUp } from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import {
   ChartConfig,
@@ -50,6 +48,7 @@ export default function MembershipPieChart() {
         }));
         setChartData(data);
       } catch (err) {
+        console.log(err)
         setError("Failed to fetch pie chart data.");
       } finally {
         setLoading(false);

@@ -41,6 +41,7 @@ export default function OrderAvgTimesCard() {
         latePickups: latePickups?.data?.[0]?.["count(*)"] ? latePickups.data[0]["count(*)"] : null,
       });
     } catch (err) {
+                console.log(err)
       setError("Failed to fetch order averages.");
     } finally {
       setLoading(false);

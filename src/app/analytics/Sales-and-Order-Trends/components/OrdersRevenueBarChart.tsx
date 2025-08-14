@@ -64,8 +64,12 @@ export function OrdersRevenueBarChart() {
         const yearSet = Array.from(new Set(rawData.map(item => item.month.split("-")[0])));
         setOrdersYears(yearSet);
         setOrdersSelectedYear(yearSet[yearSet.length - 1] || "");
-      } catch (e: any) {
-        setOrdersError(e.message || "Unknown error");
+      } catch (e) {
+          if (typeof e === "object" && e !== null && "message" in e) {
+            setOrdersError((e as { message?: string }).message || "Unknown error");
+          } else {
+            setOrdersError("Unknown error");
+          }
         setOrdersData([]);
       } finally {
         setOrdersLoading(false);
@@ -86,8 +90,12 @@ export function OrdersRevenueBarChart() {
         const yearSet = Array.from(new Set(rawData.map(item => item.month.split("-")[0])));
         setRevenueYears(yearSet);
         setRevenueSelectedYear(yearSet[yearSet.length - 1] || "");
-      } catch (e: any) {
-        setRevenueError(e.message || "Unknown error");
+      } catch (e) {
+          if (typeof e === "object" && e !== null && "message" in e) {
+            setRevenueError((e as { message?: string }).message || "Unknown error");
+          } else {
+            setRevenueError("Unknown error");
+          }
         setRevenueData([]);
       } finally {
         setRevenueLoading(false);

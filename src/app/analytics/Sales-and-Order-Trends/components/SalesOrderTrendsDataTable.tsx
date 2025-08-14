@@ -6,28 +6,13 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 
-// Define types for each endpoint
-interface HighValueBuyer {
-  buyerId: number;
-  buyerName: string;
-  totalSpent: number;
-}
-
-interface TopSellingProduct {
-  productId: number;
-  productName: string;
-  total_quantity: number;
-}
-
-interface AvgOrderValue {
-  buyerId: number;
-  buyerName: string;
-  avgOrderValue: number;
-}
 
 export function SalesOrderTrendsDataTable() {
   const [tab, setTab] = useState("high-value-buyers");
-  const [data, setData] = useState<any[]>([]);
+  type HighValueBuyer = { buyerId: string; lifetime_value: string };
+  type TopSellingProduct = { productId: number; productCategory: number; total_quantity_sold: number };
+  type AvgOrderValue = { buyerId: string; avg_order_value: string };
+  const [data, setData] = useState<Array<HighValueBuyer | TopSellingProduct | AvgOrderValue>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -50,9 +35,13 @@ export function SalesOrderTrendsDataTable() {
         if (!res.ok) throw new Error("Failed to fetch data");
         const json = await res.json();
         setData(Array.isArray(json.data) ? json.data : []);
-      } catch (e: any) {
-        setError(e.message || "Unknown error");
-        setData([]);
+      } catch (e) {
+      if (typeof e === "object" && e !== null && "message" in e) {
+        setError((e as { message?: string }).message || "Unknown error");
+      } else {
+        setError("Unknown error");
+      }
+      setData([]);
       } finally {
         setLoading(false);
       }
@@ -61,26 +50,26 @@ export function SalesOrderTrendsDataTable() {
   }, [tab]);
 
   // Filter data by search
-  const filteredData = data.filter(item => {
+  const filteredData = (() => {
     if (tab === "high-value-buyers") {
-      return (
+      return (data as HighValueBuyer[]).filter(item =>
         item.buyerId?.toString().includes(search) ||
         item.lifetime_value?.toString().includes(search)
       );
     } else if (tab === "top-selling-products") {
-      return (
+      return (data as TopSellingProduct[]).filter(item =>
         item.productId?.toString().includes(search) ||
         item.productCategory?.toString().includes(search) ||
         item.total_quantity_sold?.toString().includes(search)
       );
     } else if (tab === "avg-order-value") {
-      return (
+      return (data as AvgOrderValue[]).filter(item =>
         item.buyerId?.toString().includes(search) ||
         item.avg_order_value?.toString().includes(search)
       );
     }
-    return true;
-  });
+    return [];
+  })();
 
   return (
     <Card>
@@ -116,7 +105,7 @@ export function SalesOrderTrendsDataTable() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.map((item, idx) => (
+                    {(filteredData as HighValueBuyer[]).map((item, idx) => (
                       <TableRow key={idx}>
                         <TableCell>{item.buyerId}</TableCell>
                         <TableCell>{item.lifetime_value}</TableCell>
@@ -150,7 +139,7 @@ export function SalesOrderTrendsDataTable() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.map((item, idx) => (
+                    {(filteredData as TopSellingProduct[]).map((item, idx) => (
                       <TableRow key={idx}>
                         <TableCell>{item.productId}</TableCell>
                         <TableCell>{item.productCategory}</TableCell>
@@ -184,7 +173,7 @@ export function SalesOrderTrendsDataTable() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.map((item, idx) => (
+                    {(filteredData as AvgOrderValue[]).map((item, idx) => (
                       <TableRow key={idx}>
                         <TableCell>{item.buyerId}</TableCell>
                         <TableCell>{item.avg_order_value}</TableCell>

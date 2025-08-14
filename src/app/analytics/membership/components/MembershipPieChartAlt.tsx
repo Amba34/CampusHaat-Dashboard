@@ -2,12 +2,10 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts";
-import { TrendingUp } from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -15,7 +13,6 @@ import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart";
 
 export default function MembershipPieChartAlt() {
@@ -44,7 +41,8 @@ export default function MembershipPieChartAlt() {
           total_amount: item.total_amount,
         }));
         setChartData(data);
-      } catch (err) {
+      } catch (e) {
+        console.log(e);
         setError("Failed to fetch pie chart data.");
       } finally {
         setLoading(false);
@@ -53,7 +51,11 @@ export default function MembershipPieChartAlt() {
     fetchData();
   }, []);
   // Custom tooltip content for info card
-  const CustomTooltip = ({ active, payload }: any) => {
+  interface TooltipProps {
+    active?: boolean;
+    payload?: Array<{ payload: { mode: string; num_payments: number; total_amount: string } }>;
+  }
+  const CustomTooltip = ({ active, payload }: TooltipProps) => {
     if (active && payload && payload.length) {
       const d = payload[0].payload;
       return (

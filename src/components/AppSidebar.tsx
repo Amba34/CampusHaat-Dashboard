@@ -1,4 +1,4 @@
-import { BarChart, BarChart2, BookMinus, Calendar, ChevronDown, Github, Home, User2Icon } from "lucide-react"
+import { BarChart, BookMinus, Calendar, ChevronDown, Github,  User2Icon } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -8,7 +8,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
@@ -45,7 +44,7 @@ export default function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <Link href="/analytics/todays-orders">
                       <Calendar size={24} />
-                      <span>Today's Orders</span>
+                      <span>{"Today's Orders"}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -83,7 +82,7 @@ export default function AppSidebar() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem className="flex">
-                        <Link href="/analytics/product-insights/ProductQuantityChart">
+                        <Link href="/analytics/product-insights/ProductQuantityDataTable">
                         <div className="flex gap-4">
                           <BarChart size={24} />
                           <span>Product Quantity Data Table </span>
@@ -91,7 +90,7 @@ export default function AppSidebar() {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem>
-                        <Link href="/analytics/product-insights/ProductRevenueChart">
+                        <Link href="/analytics/product-insights/ProductRevenueDataTable">
                         <div className="flex gap-4">
 
                           <BarChart size={24} />

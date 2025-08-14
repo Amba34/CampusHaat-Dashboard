@@ -1,4 +1,12 @@
 "use client"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -8,12 +16,15 @@ import { Input } from "@/components/ui/input";
 
 export function CustomerBehaviourDataTable() {
   const [tab, setTab] = useState("repeat-vs-one-time-buyers");
-  const [data, setData] = useState<any[]>([]);
+  type RepeatVsOneTimeBuyer = { buyerId: string; order_count: number };
+  type RepeatBuyersFavoriteCategory = { buyerId: string; categoryName: string; total_orders: number };
+  const [data, setData] = useState<RepeatVsOneTimeBuyer[] | RepeatBuyersFavoriteCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   // Cache for each tab
-  const [cache, setCache] = useState<{ [key: string]: any[] }>({});
+  const [cache, setCache] = useState<{ [key: string]: RepeatVsOneTimeBuyer[] | RepeatBuyersFavoriteCategory[] }>({});
 
   // Fetch data and cache it
   const fetchData = async (forceRefresh = false) => {
@@ -39,8 +50,12 @@ export function CustomerBehaviourDataTable() {
       const newData = Array.isArray(json.data) ? json.data : [];
       setData(newData);
       setCache(prev => ({ ...prev, [tab]: newData }));
-    } catch (e: any) {
-      setError(e.message || "Unknown error");
+    } catch (e: unknown) {
+      if (typeof e === 'object' && e && 'message' in e) {
+        setError((e as { message?: string }).message || "Unknown error");
+      } else {
+        setError("Unknown error");
+      }
       setData([]);
     } finally {
       setLoading(false);
@@ -53,21 +68,25 @@ export function CustomerBehaviourDataTable() {
   }, [tab]);
 
   // Filter data by search
-  const filteredData = data.filter(item => {
+  const filteredData = (() => {
     if (tab === "repeat-vs-one-time-buyers") {
-      return (
+      return (data as RepeatVsOneTimeBuyer[]).filter(item =>
         item.buyerId?.toString().includes(search) ||
         item.order_count?.toString().includes(search)
       );
     } else if (tab === "repeat-buyers-favorite-categories") {
-      return (
+      let filtered = (data as RepeatBuyersFavoriteCategory[]).filter(item =>
         item.buyerId?.toString().includes(search) ||
         item.categoryName?.toLowerCase().includes(search.toLowerCase()) ||
         item.total_orders?.toString().includes(search)
       );
+      if (selectedCategory) {
+        filtered = filtered.filter(item => item.categoryName === selectedCategory);
+      }
+      return filtered;
     }
-    return true;
-  });
+    return [];
+  })();
 
   return (
     <Card>
@@ -109,7 +128,7 @@ export function CustomerBehaviourDataTable() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.map((item, idx) => (
+                    {(filteredData as RepeatVsOneTimeBuyer[]).map((item, idx) => (
                       <TableRow key={idx}>
                         <TableCell>{item.buyerId}</TableCell>
                         <TableCell>{item.order_count}</TableCell>
@@ -121,13 +140,45 @@ export function CustomerBehaviourDataTable() {
             )}
           </TabsContent>
           <TabsContent value="repeat-buyers-favorite-categories">
-            <Input
-              type="text"
-              placeholder="Search buyer id, category or total orders..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="max-w-xs mb-4"
-            />
+            <div className="flex items-center mb-4 justify-between w-full">
+              <Input
+                type="text"
+                placeholder="Search buyer id, category or total orders..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="max-w-xs"
+              />
+              {/* Dropdown for category filter */}
+              {data.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="max-w-xs rounded border px-2 py-1 " style={{ minWidth: 160 }}>
+                      {selectedCategory || "All Categories"}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      key="all"
+                      onClick={() => setSelectedCategory("")}
+                      className={selectedCategory === "" ? "bg-muted" : ""}
+                    >
+                      All Categories
+                    </DropdownMenuItem>
+                    {Array.from(new Set((data as RepeatBuyersFavoriteCategory[]).map(item => item.categoryName))).map(cat => (
+                      <DropdownMenuItem
+                        key={String(cat)}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={selectedCategory === cat ? "bg-muted" : ""}
+                      >
+                        {cat}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
             {loading ? (
               <div className="text-center py-8">Loading...</div>
             ) : error ? (
@@ -143,7 +194,7 @@ export function CustomerBehaviourDataTable() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.map((item, idx) => (
+                    {(filteredData as RepeatBuyersFavoriteCategory[]).map((item, idx) => (
                       <TableRow key={idx}>
                         <TableCell>{item.buyerId}</TableCell>
                         <TableCell>{item.categoryName}</TableCell>

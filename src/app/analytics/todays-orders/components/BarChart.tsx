@@ -68,7 +68,11 @@ const chartConfig = {
 
 export function ChartBarDefault() {
   const [selected, setSelected] = useState(ENDPOINTS[0])
-  const [data, setData] = useState<any[]>([])
+  type ChartData = {
+    [key: string]: string | number;
+    value: number;
+  };
+  const [data, setData] = useState<ChartData[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -81,25 +85,27 @@ export function ChartBarDefault() {
       if (!res.ok) throw new Error("Failed to fetch data")
       const json = await res.json()
       // Handle nested data (e.g., { data: [...] })
-      let rawData = Array.isArray(json) ? json : (json.data || [])
+      const rawData = Array.isArray(json) ? json : (json.data || [])
       // Normalize data to [{ xKey, value }]
-      let chartData = rawData.map((item: any) => ({
+      const chartData = rawData.map((item: Record<string, string | number>) => ({
         [selected.xKey]: item[selected.xKey],
-        value: item[selected.yKey],
+        value: typeof item[selected.yKey] === "number" ? item[selected.yKey] : Number(item[selected.yKey]),
       }))
       setData(chartData)
-    } catch (e: any) {
-      setError(e.message || "Unknown error")
-      setData([])
-    } finally {
-      setLoading(false)
+    } catch (e) {
+      if (typeof e === "object" && e !== null && "message" in e) {
+        setError((e as { message?: string }).message || "Unknown error");
+      } else {
+        setError("Unknown error");
+      }
+      setData([]);
     }
+    setLoading(false);
   }
 
   useEffect(() => {
-    fetchData()
-  }, [selected])
-
+    fetchData();
+  }, [selected.key]);
   return (
     <Card>
       <CardHeader>

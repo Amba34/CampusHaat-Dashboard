@@ -59,7 +59,7 @@ export default function MembershipLineChart() {
         // Assume each item has year, month, total_memberships, total_value
         const raw = json.data || [];
         // If year/month not present, generate from index
-        let processed: MembershipMonthData[] = raw.map((item: any, idx: number) => {
+        const processed: MembershipMonthData[] = raw.map((item: { year: string | number; month: string | number; total_memberships: number; total_value: number }) => {
           // item.month is like "2021-01"
           let year = "";
           let month = "";
@@ -83,6 +83,7 @@ export default function MembershipLineChart() {
         setSelectedYear(yearSet[yearSet.length - 1] || "");
         setData(processed);
       } catch (err) {
+        console.log(err)
         setError("Failed to fetch chart data.");
       } finally {
         setLoading(false);

@@ -24,13 +24,14 @@ export default function MembershipInfoCard() {
         setNonMemberPayment(json1.data?.[0]?.total_non_member_payment || "-");
         setMembershipValue(json2.data?.[0]?.total_membership_value || "-");
       } catch (err) {
-        setError("Failed to fetch info card data.");
+        console.log(err)
+        setError("Failed to fetch info card data."); // Keeping the error handling for clarity
       } finally {
         setLoading(false);
       }
     }
     fetchInfo();
-  }, []);
+  }, [BASE_URL]);
 
   return (
     <Card className="w-full">
