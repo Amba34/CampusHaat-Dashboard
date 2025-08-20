@@ -5,17 +5,23 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 export function SalesOrderTrendsDataTable() {
   const [tab, setTab] = useState("high-value-buyers");
   type HighValueBuyer = { buyerId: string; lifetime_value: string };
   type TopSellingProduct = { productId: number; productCategory: number; total_quantity_sold: number };
-  type AvgOrderValue = { buyerId: string; avg_order_value: string };
+  type AvgOrderValue = { buyerId: string; value: string };
   const [data, setData] = useState<Array<HighValueBuyer | TopSellingProduct | AvgOrderValue>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [selectedYear, setSelectedYear] = useState("2022");
+
+  // Generate years from 2019 to current year
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 2018 }, (_, i) => (2019 + i).toString());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,7 +33,7 @@ export function SalesOrderTrendsDataTable() {
       } else if (tab === "top-selling-products") {
         endpoint = "/api/sales-and-order-trends/top-10-selling-products-by-quantity";
       } else if (tab === "avg-order-value") {
-        endpoint = "/api/sales-and-order-trends/average-order-value-per-buyer";
+        endpoint = `/api/sales-and-order-trends/average-order-value-per-buyer?year=${selectedYear}`;
       }
       try {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:9000";
@@ -47,7 +53,7 @@ export function SalesOrderTrendsDataTable() {
       }
     };
     fetchData();
-  }, [tab]);
+  }, [tab, selectedYear]);
 
   // Filter data by search
   const filteredData = (() => {
@@ -65,7 +71,7 @@ export function SalesOrderTrendsDataTable() {
     } else if (tab === "avg-order-value") {
       return (data as AvgOrderValue[]).filter(item =>
         item.buyerId?.toString().includes(search) ||
-        item.avg_order_value?.toString().includes(search)
+        item.value?.toString().includes(search)
       );
     }
     return [];
@@ -152,13 +158,25 @@ export function SalesOrderTrendsDataTable() {
             )}
           </TabsContent>
           <TabsContent value="avg-order-value">
-            <Input
-              type="text"
-              placeholder="Search buyer id or avg order value..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="max-w-xs mb-4"
-            />
+            <div className="flex items-center gap-2 mb-4">
+              <Input
+                type="text"
+                placeholder="Search buyer id or avg order value..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="max-w-xs"
+              />
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Select Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {loading ? (
               <div className="text-center py-8">Loading...</div>
             ) : error ? (
@@ -176,7 +194,7 @@ export function SalesOrderTrendsDataTable() {
                     {(filteredData as AvgOrderValue[]).map((item, idx) => (
                       <TableRow key={idx}>
                         <TableCell>{item.buyerId}</TableCell>
-                        <TableCell>{item.avg_order_value}</TableCell>
+                        <TableCell>{item.value}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
